@@ -7,6 +7,7 @@ use App\Http\Controllers\File;
 use Storage;
 use File as FileCustom;
 use App\Http\Requests\MessageRequest;
+use App\Http\Requests\UpdateRequest;
 
 class StudentController extends Controller
 {
@@ -17,7 +18,7 @@ class StudentController extends Controller
      */
     public function index()
     {
-        $students = Student::latest()->paginate(5);
+        $students = Student::latest()->paginate(config('variable.pagination'));
         return view('student', compact('students'))->with('i', (request()->input('page', 1) - 1) * 5);
     }
 
@@ -44,18 +45,10 @@ class StudentController extends Controller
         $student->address = $request->txtAdd;
         $student->school = $request->txtSchool;
         $file = $request->txtFile;
-
-        $check = Storage::disk('public')->exists($file->getClientOriginalName());
-        if ($check) {
-            $file_name = time() . $file->getClientOriginalName();
-            $file->storeAs('public/', $file_name);
-            $url_file = "storage/" . $file_name;
-        } else {
-            $file_name = $file->getClientOriginalName();
-            $file->storeAs('public/', $file_name);
-            $url_file = "storage/" . $file_name;
-        }
-        $student->url_file = $url_file;
+        $fileName = time() . $file->getClientOriginalName();
+        $file->storeAs('public/', $fileName);
+        $urlFile = config('variable.url_upload') . $fileName;
+        $student->url_file = $urlFile;
         $student->save();
         return redirect()->route('students.index')->with('success', 2);
     }
@@ -99,38 +92,33 @@ class StudentController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(MessageRequest $request, $id)
+    public function update(UpdateRequest $request, $id)
     {
-        $student =  Student::find($id);
-        $file = $request->txtFile;
-
-        $url_file_old = $student->url_file;
-        $file_olds = explode("/", $url_file_old);
-        $file_old = $file_olds[1];
+        $student = Student::find($id);
+        $urlFileOld = $student->url_file;
+        $fileOlds = explode("/", $urlFileOld);
+        $fileOld = $fileOlds[1];
         $student->name = $request->txtName;
         $student->address = $request->txtAdd;
         $student->school = $request->txtSchool;
         $file = $request->txtFile;
-        $check = Storage::disk('public')->exists($file->getClientOriginalName());
-        if (!$check) {
-            $file_name =  $file->getClientOriginalName();
-            $file->storeAs('/public', $file_name);
-            $url_file = "storage/" . $file_name;
-            echo "$check";
-            Storage::disk('public')->delete($file_old);
-        } else {
-            if (md5(Storage::disk('public')->get($file_old)) == md5(FileCustom::get($file->getRealPath()))) {
-                $file_name =  $file->getClientOriginalName();
-                $file->storeAs('/public', $file_name);
-                $url_file = "storage/" . $file_name;
+        if ($file) {
+            $check = Storage::disk('public')->exists($file->getClientOriginalName());
+
+            if (!$check) {
+                $fileName =  $file->getClientOriginalName();
+                $file->storeAs('/public', $fileName);
+                $urlFile = config('variable.url_upload') . $fileName;
+                Storage::disk('public')->delete($fileOld);
             } else {
-                $file_name =  time() . $file->getClientOriginalName();
-                $file->storeAs('/public', time() . $file_name);
-                $url_file = "storage/" . time() . $file_name;
-                Storage::disk('public')->delete($file_old);
+                $fileName =  time() . $file->getClientOriginalName();
+                $file->storeAs('/public', $fileName);
+                $urlFile = config('variable.url_upload') . $fileName;
+                Storage::disk('public')->delete($fileOld);
             }
+
+            $student->url_file = $urlFile;
         }
-        $student->url_file = $url_file;
         $student->save();
         return redirect()->route('students.index')->with('success', 15);
     }
@@ -143,12 +131,11 @@ class StudentController extends Controller
      */
     public function destroy($id)
     {
-        $student = new Student();
-        $user = $student::find($id);
-        $url_file = $user->url_file;
-        $file_names = explode("/", $url_file);
-        $file_name = $file_names[1];
-        Storage::disk('public')->delete($file_name);
+        $user = Student::find($id);
+        $urlFile = $user->url_file;
+        $fileNames = explode("/", $urlFile);
+        $fileName = $fileNames[1];
+        Storage::disk('public')->delete($fileName);
         $user->delete();
         return redirect()->route('students.index')->with('success', 25);
     }
