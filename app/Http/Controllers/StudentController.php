@@ -45,7 +45,7 @@ class StudentController extends Controller
         $student->address = $request->txtAdd;
         $student->school = $request->txtSchool;
         $file = $request->txtFile;
-        $fileName = time() . $file->getClientOriginalName();
+        $fileName = uniqid() . $file->getClientOriginalName();
         $file->storeAs('public/', $fileName);
         $urlFile = config('variable.url_upload') . $fileName;
         $student->url_file = $urlFile;
@@ -111,7 +111,7 @@ class StudentController extends Controller
                 $urlFile = config('variable.url_upload') . $fileName;
                 Storage::disk('public')->delete($fileOld);
             } else {
-                $fileName =  time() . $file->getClientOriginalName();
+                $fileName =  uniqid() . $file->getClientOriginalName();
                 $file->storeAs('/public', $fileName);
                 $urlFile = config('variable.url_upload') . $fileName;
                 Storage::disk('public')->delete($fileOld);
