@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Student;
 use App\Http\Controllers\File;
 use Storage;
 use File as FileCustom;
+use App\Http\Requests\MessageRequest;
 
 class StudentController extends Controller
 {
@@ -37,15 +37,8 @@ class StudentController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(MessageRequest $request)
     {
-        request()->validate([
-            "txtName" => "required",
-            "txtAdd" => "required",
-            "txtSchool" => "required",
-            "txtFile" => "required|image|mimes:jpeg,png,jpg,svg,gif|max:2048",
-        ]);
-
         $student = new Student();
         $student->name = $request->txtName;
         $student->address = $request->txtAdd;
@@ -106,15 +99,8 @@ class StudentController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(MessageRequest $request, $id)
     {
-        request()->validate([
-            'txtName' => 'required',
-            'txtAdd' => 'required',
-            'txtSchool' => 'required',
-            'txtFile' => 'required|image|mimes:jpeg, jpg, png, gif, svg|max:2048',
-        ]);
-
         $student =  Student::find($id);
         $file = $request->txtFile;
 

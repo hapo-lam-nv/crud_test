@@ -26,7 +26,7 @@ class AddColumnToStudents extends Migration
     public function down()
     {
         Schema::table('students', function (Blueprint $table) {
-            //
+            $table->dropColumn('url_file');
         });
     }
 }
